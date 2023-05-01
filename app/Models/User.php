@@ -8,11 +8,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\Permission;
-use App\Models\Traits\UserACLTrait;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, UserACLTrait;
+    use HasApiTokens, HasFactory, Notifiable;
     /**
      * The attributes that are mass assignable.
      *
@@ -55,6 +54,24 @@ class User extends Authenticatable
     public function permissions()
     {
         return $this->belongsToMany(Permission::class, 'permission_user');
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return $this->role()->where('name', $role)->exists();
+    }
+
+    public function hasPermissions($permissions): bool
+    {
+        $userPermissions = $this->permissions()->pluck('name')->toArray();
+
+        foreach ($permissions as $permission) {
+            if (!in_array($permission, $userPermissions)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 }

@@ -6,6 +6,7 @@ namespace App\Repository\Eloquent;
 use App\Models\User;
 use App\Repository\Contracts\UserRepositoryInterface;
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
 
 class UserRepository implements UserRepositoryInterface
 {
@@ -76,14 +77,46 @@ class UserRepository implements UserRepositoryInterface
     }
 
     /**
-     * select a user by email
+     * select a user by documentNumber
      *
-     * @param $email
+     * @param $documentNumber
      * @return Array
      */
-    public function find(string $email): ?object
+    public function find(string $documentNumber): ?object
     {
-        return $this->user->where('email',$email)->first();
+        return $this->user->where('documentNumber',$documentNumber)->first();
+    }
+
+    /**
+     * select a user by id
+     *
+     * @param $id
+     * @return Collection
+     */
+    public function findById($id): Collection
+    {
+        $user = $this->user->find($id);
+        if(!$user){
+            throw new Exception("User Not Found", 1);
+        }
+
+        return $user;
+    }
+
+    /**
+     * select a user by id
+     *
+     * @param $id
+     * @return Collection
+     */
+    public function findByDocumentNumber($documentNumber): Collection
+    {
+        $user = $this->user->where('documentNumber',$documentNumber);
+        if(!$user){
+            throw new Exception("User Not Found", 1);
+        }
+
+        return $user;
     }
 
     /**
@@ -95,5 +128,23 @@ class UserRepository implements UserRepositoryInterface
     public function selectRelationAtribbutes($attributes) : Object
     {
        return $this->user->with($attributes)->get();
+    }
+
+    public function hasRole(string $documentNumber, String $role): bool
+    {
+        return $this->user->role()->where('documentNumber', $documentNumber)->where('name', $role)->exists();
+    }
+
+    public function hasPermissions(string $documentNumber, Array $permissions): bool
+    {
+        $userPermissions = $this->user->permissions()->where('documentNumber', $documentNumber)->pluck('name')->toArray();
+
+        foreach ($permissions as $permission) {
+            if (!in_array($permission, $userPermissions)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

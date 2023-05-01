@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace App\Repository\Contracts;
 
-interface UserRepositoryInterface
+interface TransactionRepositoryInterface
 {
     public function findAll(): array;
     public function create(array $data): object;
