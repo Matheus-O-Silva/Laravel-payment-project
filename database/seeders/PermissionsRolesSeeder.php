@@ -16,8 +16,8 @@ class PermissionsRolesSeeder extends Seeder
     public function run(): void
     {
         // Criação das Roles
-        $roleShopKeeper = Role::create(['name' => 'shopKeeper']);
-        $roleClient = Role::create(['name' => 'user']);
+        $roleShopKeeper = Role::create(['name' => 'shopkeeper']);
+        $roleClient = Role::create(['name' => 'client']);
 
         // Criação das Permissions
         $permissionSendMoney = Permission::create(['name' => 'send_money']);
