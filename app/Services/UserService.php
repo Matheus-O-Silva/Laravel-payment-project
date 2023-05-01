@@ -38,9 +38,12 @@ class UserService
     public function store(RegisterRequest $registerRequest): UserResource
     {
         $user = $this->userRepository->create([
-            'name' => $registerRequest->name,
-            'email'      => $registerRequest->email,
-            'password'   => Hash::make($registerRequest->password)
+            'name'           => $registerRequest->name,
+            'documentType'   => $registerRequest->documentType,
+            'documentNumber' => $registerRequest->documentNumber,
+            'email'          => $registerRequest->email,
+            'device_number'  => $registerRequest->device_number,
+            'password'       => Hash::make($registerRequest->password)
         ]);
 
         return new UserResource($user);
@@ -62,9 +65,9 @@ class UserService
             ]);
         }
 
-        // if($loginRequest->has('logout_others_devices')){
-        //     $user->tokens()->delete();
-        // }
+        if($loginRequest->has('logout_others_devices')){
+            $user->tokens()->delete();
+        }
 
         return new UserResource([$user->createToken($loginRequest->device_name)->plainTextToken]);
     }
