@@ -6,12 +6,10 @@ namespace App\Services;
 use App\Repository\Eloquent\UserRepository;
 use App\Http\Resources\UserResource;
 use App\Models\User;
-use Illuminate\Http\Response;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
 use Exception;
 
 class UserService
@@ -37,8 +35,10 @@ class UserService
      */
     public function store(RegisterRequest $registerRequest): UserResource
     {
+
         $user = $this->userRepository->create([
             'name'           => $registerRequest->name,
+            'role_id'        => $registerRequest->role_id == 'Comum' ? 2 : 1,
             'documentType'   => $registerRequest->documentType,
             'documentNumber' => $registerRequest->documentNumber,
             'email'          => $registerRequest->email,
