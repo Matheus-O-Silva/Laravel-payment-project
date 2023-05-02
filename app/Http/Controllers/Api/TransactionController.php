@@ -32,18 +32,18 @@ class TransactionController extends Controller
      */
     public function sendMoney(Request $request)// : JsonResponse
     {
-        $this->transactionService->sendMoney($request->sent_user_id, $request->receivingUserDocumentNumber, $request->amount);
-        // try {
-        // } catch (\Throwable $e) {
-        //     Log::error($e->getMessage());
-        //     return response()
-        //         ->json(
-        //             'cannot.perform.your.action.try.again.later',
-        //             Response::HTTP_INTERNAL_SERVER_ERROR
-        //         );
-        // }
+        try {
+            $this->transactionService->sendMoney($request->sent_user_id, $request->receivingUserDocumentNumber, $request->amount);
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            return response()
+                ->json(
+                    'cannot.perform.your.action.try.again.later',
+                    Response::HTTP_INTERNAL_SERVER_ERROR
+                );
+        }
 
-        // return new JsonResponse('success', Response::HTTP_OK);
+        return new JsonResponse('success', Response::HTTP_OK);
     }
 
 

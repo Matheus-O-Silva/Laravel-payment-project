@@ -31,7 +31,7 @@ class BalanceController extends Controller
      * @throws \Exception $e
      * @return \Symfony\Component\HttpFoundation\JsonResponse;
      */
-    public function sendMoney(Request $request) : JsonResponse
+    public function addMoney(Request $request) : JsonResponse
     {
         try {
             $this->balanceService->addMoney(Auth::user()->id, $request->amount);

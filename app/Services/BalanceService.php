@@ -52,14 +52,17 @@ class BalanceService
      */
     public function addMoney($user_id, $amount): bool
     {
+
         if ($amount <= 0) {
             throw new Exception("Valor inválido");
         }
 
-        $userBalance = $this->balanceRepository->findByUserId($user_id);
-        $userBalance->update('amount', $userBalance->amount + $amount);
+        $userBalance = Balance::where('user_id', $user_id)->first();
+        $userBalance->update(['amount' => $userBalance->amount + $amount]);
         $userBalance->refresh();
         $userBalance->save();
+
+        dd('bora');
 
         return true;
     }

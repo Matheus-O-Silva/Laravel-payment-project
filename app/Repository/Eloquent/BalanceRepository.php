@@ -8,7 +8,7 @@ use App\Repository\Contracts\BalanceRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Exception;
 
-class BalanceRepository //implements BalanceRepositoryInterface
+class BalanceRepository implements BalanceRepositoryInterface
 {
     protected $balance;
 

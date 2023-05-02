@@ -8,7 +8,11 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
+use App\Models\Balance;
+use Illuminate\Support\Facades\Log;
+use App\Models\Permission;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Exception;
 
@@ -35,16 +39,40 @@ class UserService
      */
     public function store(RegisterRequest $registerRequest): UserResource
     {
+        try{
+            DB::beginTransaction();
 
-        $user = $this->userRepository->create([
-            'name'           => $registerRequest->name,
-            'role_id'        => $registerRequest->role_id == 'Comum' ? 2 : 1,
-            'documentType'   => $registerRequest->documentType,
-            'documentNumber' => $registerRequest->documentNumber,
-            'email'          => $registerRequest->email,
-            'device_number'  => $registerRequest->device_number,
-            'password'       => Hash::make($registerRequest->password)
-        ]);
+            $user = $this->userRepository->create([
+                'name'           => $registerRequest->name,
+                'role_id'        => $registerRequest->role_id == 'Comum' ? 2 : 1,
+                'documentType'   => $registerRequest->documentType,
+                'documentNumber' => $registerRequest->documentNumber,
+                'email'          => $registerRequest->email,
+                'device_number'  => $registerRequest->device_number,
+                'password'       => Hash::make($registerRequest->password)
+            ]);
+
+            $sendMoneyPermission    = Permission::where('name','send_money')->first();
+            $receiveMoneyPermission = Permission::where('name','receive_money')->first();
+
+            if($registerRequest->role_id == 'Comum'){
+                $user->permissions()->attach([$sendMoneyPermission->id, $receiveMoneyPermission->id]);
+            }
+
+            if($registerRequest->role_id == 'Lojista'){
+                $user->permissions()->attach([$receiveMoneyPermission->id]);
+            }
+
+            Balance::create([
+                'user_id' => $user->id,
+                'amount'  => 0.00
+            ]);
+
+            DB::commit();
+        }catch(Exception $e){
+            Log::error($e->getMessage());
+            DB::rollback();
+        }
 
         return new UserResource($user);
     }
