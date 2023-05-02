@@ -129,8 +129,6 @@ class TransactionService
                 'transferred_amount' => $amount
             ]);
 
-            DB::commit();
-
             if(!$this->sendNotificationEmail()){
                 DB::rollback();
                 throw new Exception("Erro na transação. Por favor, tente novamente mais tarde");
@@ -141,6 +139,7 @@ class TransactionService
                 throw new Exception("Erro na transação. Por favor, tente novamente mais tarde");
             }
 
+            DB::commit();
             return true;
 
         }catch(Exception $e){
