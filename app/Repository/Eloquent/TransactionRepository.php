@@ -7,7 +7,7 @@ use App\Models\Transaction;
 use App\Repository\Contracts\TransactionRepositoryInterface;
 use Exception;
 
-class TransactionRepository implements TransactionRepositoryInterface
+class TransactionRepository // implements TransactionRepositoryInterface
 {
     protected $transaction;
 

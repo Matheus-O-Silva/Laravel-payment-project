@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-class AuthController extends Controller
+class TransactionController extends Controller
 {
     protected $transactionService;
 
@@ -30,20 +30,20 @@ class AuthController extends Controller
      * @throws \Exception $e
      * @return \Symfony\Component\HttpFoundation\JsonResponse;
      */
-    public function sendMoney(Request $request) : JsonResponse
+    public function sendMoney(Request $request)// : JsonResponse
     {
-        try {
-            $this->transactionService->sendMoney($request->sent_user_id, $request->receivingUserDocumentNumber, $request->amount);
-        } catch (\Throwable $e) {
-            Log::error($e->getMessage());
-            return response()
-                ->json(
-                    'cannot.perform.your.action.try.again.later',
-                    Response::HTTP_INTERNAL_SERVER_ERROR
-                );
-        }
+        $this->transactionService->sendMoney($request->sent_user_id, $request->receivingUserDocumentNumber, $request->amount);
+        // try {
+        // } catch (\Throwable $e) {
+        //     Log::error($e->getMessage());
+        //     return response()
+        //         ->json(
+        //             'cannot.perform.your.action.try.again.later',
+        //             Response::HTTP_INTERNAL_SERVER_ERROR
+        //         );
+        // }
 
-        return new JsonResponse('success', Response::HTTP_OK);
+        // return new JsonResponse('success', Response::HTTP_OK);
     }
 
 

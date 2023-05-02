@@ -8,7 +8,7 @@ use App\Repository\Contracts\BalanceRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Exception;
 
-class BalanceRepository implements BalanceRepositoryInterface
+class BalanceRepository //implements BalanceRepositoryInterface
 {
     protected $balance;
 
@@ -78,7 +78,7 @@ class BalanceRepository implements BalanceRepositoryInterface
      * @param $user_id
      * @return Collection
      */
-    public function findByUserId(string $user_id): Collection
+    public function findByUserId($user_id): Collection
     {
         $user = $this->balance->where('user_id',$user_id)->first();
 
@@ -113,5 +113,14 @@ class BalanceRepository implements BalanceRepositoryInterface
     public function selectRelationAtribbutes($attributes) : Object
     {
        return $this->balance->with($attributes)->get();
+    }
+
+    public function getBalanceByUserId($user_id)
+    {
+        $userAmount = $this->balance->select('amount')->where('user_id',$user_id)->get();
+
+        $userAmount = $userAmount[0]->amount;
+
+        return $userAmount;
     }
 }

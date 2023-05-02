@@ -6,9 +6,14 @@ namespace App\Services;
 use App\Repository\Eloquent\TransactionRepository;
 use App\Repository\Eloquent\UserRepository;
 use App\Repository\Eloquent\BalanceRepository;
+use App\Models\Transaction;
 use App\Services\UserService;
 use App\Services\BalanceService;
+use App\Services\EmailService;
+use App\Models\Balance;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Exception;
 
 class TransactionService
@@ -34,6 +39,7 @@ class TransactionService
 
     {
         return $this->transactionRepository = $transactionRepository;
+        return $this->balanceRepository     = $balanceRepository;
         return $this->userRepository        = $userRepository;
         return $this->userService           = $userService;
         return $this->balanceService        = $balanceService;
@@ -47,19 +53,28 @@ class TransactionService
      */
     public function sendMoney($sent_user_id, $receivingUserDocumentNumber, $amount)
     {
-        //if the user has enough balance, continue the operation
-        if($this->balanceService->hasBalance($sent_user_id, $amount)){
+        $userAmount = Balance::where('user_id', $sent_user_id)->first();
+        if(empty($userAmount->amount)){
+            throw new Exception("Insufficient balance");
+        }
 
-            $user          = $this->userRepository->findById($sent_user_id);
-            $receivingUser = $this->userRepository->findByDocumentNumber($receivingUserDocumentNumber);
+        $userAmount = $userAmount->amount;
+
+        //if the user has enough balance, continue the operation
+        if($userAmount >= $amount){
+            $user          = User::find($sent_user_id);
+            $receivingUser = User::where('documentNumber',$receivingUserDocumentNumber)->get();
+            if(empty($receivingUser)){
+                throw new Exception("User Not Found");
+            }
 
             //verify if the authenticated user can do transfers
-            if($user->hasRole(['shopKeeper'])){
+            if($user->hasRole('shopKeeper')){
                 throw new Exception("Insufficient permissions");
             }
 
             //verify if the authenticated has permissions
-            if(!$this->userRepository->hasPermissions($user->documentNumber,['send_money'])){
+            if (!$user->hasPermissions(['send_money'])) {
                 throw new Exception("Insufficient permissions");
             }
 
@@ -83,59 +98,79 @@ class TransactionService
             throw new Exception("Valor inválido para transferência");
         }
 
-        if ($send->id == $to->id) {
-            throw new Exception("Não é possível transferir para a própria conta");
-        }
-
         try{
             DB::beginTransaction();
-            //remove amount from the send user
-            $sentUser = $this->balanceRepository->findByUserId($send->id);
+            $senderUser = Balance::where('user_id', $send->id)->first();
 
-            if ($sentUser->amount < $amount) {
+            if ($senderUser->amount < $amount) {
                 DB::rollback();
                 throw new Exception("Saldo insuficiente para realizar a transferência");
             }
-            $sentUser->update('amount', $sentUser->amount - $amount);
-            $sentUser->refresh();
-            $sentUser->save();
+
+            if ($senderUser->amount < $amount) {
+                DB::rollback();
+                throw new Exception("Saldo insuficiente para realizar a transferência");
+            }
+            $senderUser->update(['amount' => $senderUser->amount - $amount]);
+            $senderUser->refresh();
+            $senderUser->save();
 
             //add amount to the receiving user
-            $receivingUser = $this->balanceRepository->findByUserId($to->id);
-            $receivingUser->update('amount', $receivingUser->amount + $amount);
+            $receivingUser = Balance::where('user_id', $to[0]->id)->first();
+
+            $receivingUser->update(['amount' => $receivingUser->amount + $amount]);
             $receivingUser->refresh();
             $receivingUser->save();
 
             //save the Operation to the transactions log
-            $this->transactionRepository->create([
+            Transaction::create([
                 'sent_user_id'       => $send->id,
-                'receive_user_id'    => $to->id,
+                'receive_user_id'    => $to[0]->id,
                 'transferred_amount' => $amount
             ]);
 
             DB::commit();
 
-            //$this->emailService->send($send, $to, $amount);
+            if(!$this->sendNotificationEmail()){
+                DB::rollback();
+                throw new Exception("Erro na transação. Por favor, tente novamente mais tarde");
+            }
+
+            if(!$this->AllowVerify()){
+                DB::rollback();
+                throw new Exception("Erro na transação. Por favor, tente novamente mais tarde");
+            }
 
             return true;
 
         }catch(Exception $e){
             DB::rollback();
-            throw new Exception("Erro na transação.Por favor, tente novamente mais tarde", 1);
+            throw new Exception("Erro na transação. Por favor, tente novamente mais tarde");
         }
 
         return false;
     }
 
-    /**
-     * send an email to notify the transfer
-     *
-     * @throws \Exception
-     * @return Json
-     */
-    public function notifyTransfer($send, $to, $amount)
+    public function sendNotificationEmail(): bool
     {
+        $response = Http::get('https://run.mocky.io/v3/4ce65eb0-2eda-4d76-8c98-8acd9cfd2d39');
 
+        if ($response->successful()) {
+            return true;
+        } else {
+           return false;
+        }
+    }
+
+    public function AllowVerify(): bool
+    {
+        $response = Http::get('https://run.mocky.io/v3/f2fe9a2d-090f-4129-b9bf-70d283c97d5c');
+
+        if ($response->successful()) {
+            return true;
+        } else {
+           return false;
+        }
     }
 
 }

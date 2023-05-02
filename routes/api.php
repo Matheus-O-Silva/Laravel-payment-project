@@ -1,14 +1,13 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\TransactionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
 Route::middleware(['auth:sanctum', 'client'])->group(function () {
-    Route::get('/transaction-client', function () {
-        return response()->json('transaction-client');
-    });
+    Route::post('/transaction-client', [TransactionController::class, 'sendMoney']);
 });
 
 Route::middleware(['auth:sanctum', 'shopkeeper'])->group(function () {
