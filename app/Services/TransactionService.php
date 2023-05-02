@@ -45,29 +45,29 @@ class TransactionService
      * @throws \Exception
      * @return Json
      */
-    public function sendMoney($sent_user_id, $receiveDocumentNumber, $amount)
+    public function sendMoney($sent_user_id, $receivingUserDocumentNumber, $amount)
     {
-        //if the user has enought balance, continue the operation
+        //if the user has enough balance, continue the operation
         if($this->balanceService->hasBalance($sent_user_id, $amount)){
 
             $user          = $this->userRepository->findById($sent_user_id);
-            $receivingUser = $this->userRepository->findByDocumentNumber($receiveDocumentNumber);
+            $receivingUser = $this->userRepository->findByDocumentNumber($receivingUserDocumentNumber);
 
             //verify if the authenticated user can do transfers
             if($user->hasRole(['shopKeeper'])){
-                return response('Insufficient permissions', 500);
+                throw new Exception("Insufficient permissions");
             }
 
             //verify if the authenticated has permissions
             if(!$this->userRepository->hasPermissions($user->documentNumber,['send_money'])){
-                return response('Insufficient permissions', 500);
+                throw new Exception("Insufficient permissions");
             }
 
             //Do the Transaction
             $this->doTransaction($user, $receivingUser, $amount);
 
         }else{
-            return response()->json('Insufficient balance', 500);
+            throw new Exception("Saldo insuficiente para realizar a transferência");
         }
     }
 
@@ -75,14 +75,27 @@ class TransactionService
      * do transaction
      *
      * @throws \Exception
-     * @return Json
+     * @return bool
      */
-    public function doTransaction($send, $to, $amount)
+    public function doTransaction($send, $to, $amount): bool
     {
+        if ($amount <= 0) {
+            throw new Exception("Valor inválido para transferência");
+        }
+
+        if ($send->id == $to->id) {
+            throw new Exception("Não é possível transferir para a própria conta");
+        }
+
         try{
             DB::beginTransaction();
             //remove amount from the send user
             $sentUser = $this->balanceRepository->findByUserId($send->id);
+
+            if ($sentUser->amount < $amount) {
+                DB::rollback();
+                throw new Exception("Saldo insuficiente para realizar a transferência");
+            }
             $sentUser->update('amount', $sentUser->amount - $amount);
             $sentUser->refresh();
             $sentUser->save();
@@ -102,12 +115,16 @@ class TransactionService
 
             DB::commit();
 
-            //send email
+            //$this->emailService->send($send, $to, $amount);
+
+            return true;
 
         }catch(Exception $e){
             DB::rollback();
             throw new Exception("Erro na transação.Por favor, tente novamente mais tarde", 1);
         }
+
+        return false;
     }
 
     /**

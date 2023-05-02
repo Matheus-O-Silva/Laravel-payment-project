@@ -3,28 +3,29 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\TransactionService;
+use App\Services\BalanceService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-class AuthController extends Controller
+class BalanceController extends Controller
 {
-    protected $transactionService;
+    protected $balanceService;
 
     /**
      * Make a instance of Service
      *
-     * @param \App\Services\TransactionService  $transactionService
+     * @param \App\Services\BalanceService  $balanceService
      */
-    public function __construct(TransactionService $transactionService)
+    public function __construct(balanceService $balanceService)
     {
-        $this->transactionService = $transactionService;
+        $this->balanceService = $balanceService;
     }
 
     /**
-     * Sent amount to other user
+     * add amount to user account
      *
      * @param \Illuminate\Http\Request;
      * @throws \Exception $e
@@ -33,7 +34,7 @@ class AuthController extends Controller
     public function sendMoney(Request $request) : JsonResponse
     {
         try {
-            $this->transactionService->sendMoney($request->sent_user_id, $request->receivingUserDocumentNumber, $request->amount);
+            $this->balanceService->addMoney(Auth::user()->id, $request->amount);
         } catch (\Throwable $e) {
             Log::error($e->getMessage());
             return response()

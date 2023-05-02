@@ -46,4 +46,24 @@ class BalanceService
         return $userBalance > $amount ? true : false;
     }
 
+    /**
+     * Add money to the user account
+     *
+     * @throws \Exception
+     * @return Json
+     */
+    public function addMoney($user_id, $amount): bool
+    {
+        if ($amount <= 0) {
+            throw new Exception("Valor inválido");
+        }
+
+        $userBalance = $this->balanceRepository->findByUserId($user_id);
+        $userBalance->update('amount', $userBalance->amount + $amount);
+        $userBalance->refresh();
+        $userBalance->save();
+
+        return true;
+    }
+
 }
