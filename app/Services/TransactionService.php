@@ -24,6 +24,7 @@ class TransactionService
      *
      * @param App\Repository\Eloquent\BalanceRepository $balanceRepository
      * @param App\Repository\Eloquent\TransactionRepository $transactionRepository
+     * @param App\Serive\EmailService $emailService
      */
     public function __construct(
         TransactionRepository $transactionRepository,

@@ -26,9 +26,9 @@ class BalanceService
         BalanceRepository $balanceRepository
         )
     {
-        return $this->userRepository        = $userRepository;
-        return $this->userService           = $userService;
-        return $this->balanceRepository     = $balanceRepository;
+        $this->userRepository        = $userRepository;
+        $this->userService           = $userService;
+        $this->balanceRepository     = $balanceRepository;
     }
 
     /**
@@ -42,40 +42,6 @@ class BalanceService
         $userBalance = Balance::where('user_id', $user_id)->get();
 
         return $userBalance->balance >= $amount;
-    }
-
-    /**
-     * Add money to the user account
-     *
-     * @throws \Exception
-     * @return Json
-     */
-    public function addMoney($user_id, $amount): bool
-    {
-
-        if ($amount <= 0) {
-            throw new Exception("Valor inválido");
-        }
-
-        $userBalance = Balance::where('user_id', $user_id)->first();
-        $userBalance->update(['amount' => $userBalance->amount + $amount]);
-        $userBalance->refresh();
-        $userBalance->save();
-
-        return true;
-    }
-
-    /**
-     * retrives the amount of the user account
-     *
-     * @throws \Exception
-     * @return Collection
-     */
-    public function getAmount($user_id, $amount): float
-    {
-        $userBalance = Balance::where('user_id', $user_id)->firstOrFail();
-
-        return $userBalance->amount;
     }
 
 }
