@@ -5,6 +5,7 @@ namespace App\Repository\Eloquent;
 
 use App\Models\Transaction;
 use App\Repository\Contracts\TransactionRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Exception;
 
 class TransactionRepository implements TransactionRepositoryInterface
@@ -25,18 +26,18 @@ class TransactionRepository implements TransactionRepositoryInterface
      * retrieves all transaction registers
      *
      * @param $attributes
-     * @return Array
+     * @return Collection
      */
-    public function findAll(): array
+    public function findAll(): Collection
     {
-        return $this->transaction->get()->toArray();
+        return $this->transaction->get();
     }
 
     /**
      * create a new transaction
      *
      * @param $data
-     * @return Array
+     * @return object
      */
     public function create($data): object
     {
@@ -46,11 +47,11 @@ class TransactionRepository implements TransactionRepositoryInterface
     /**
      * update a transaction
      *
-     * @param $email
+     * @param $id
      * @param $data
-     * @return Array
+     * @return Collection
      */
-    public function update(string $id,array $data): object
+    public function update(string $id,array $data): Collection
     {
         $transaction = $this->transaction->find($id);
         $transaction->update($data);
@@ -61,38 +62,38 @@ class TransactionRepository implements TransactionRepositoryInterface
     }
 
     /**
-     * select a user by email
+     * select a transaction by user_id
      *
-     * @param $email
-     * @return Array
+     * @param $user_id
+     * @return Collection
      */
-    public function find(string $email): ?object
+    public function find($user_id): Collection
     {
-        return $this->transaction->where('email',$email)->first();
+        return $this->transaction->where('email',$user_id)->first();
     }
 
     /**
      * delete a transaction
      *
-     * @param $email
-     * @return Array
+     * @param $id
+     * @return Collection
      */
-    public function delete(string $email): bool
+    public function delete($id): Collection
     {
-        if(!$transaction = $this->transaction->find($email)){
-            throw new Exception("transaction Not Found", 1);
+        if(!$transaction = $this->transaction->find($id)){
+            throw new Exception("transaction Not Found");
         }
 
         return $transaction->delete();
     }
 
     /**
-     * returns registers with re Attributes
+     * returns registers with Attributes
      *
      * @param $attributes
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function selectRelationAtribbutes($attributes) : Object
+    public function selectRelationAtribbutes($attributes) : Collection
     {
        return $this->transaction->with($attributes)->get();
     }

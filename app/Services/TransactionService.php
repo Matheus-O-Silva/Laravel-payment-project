@@ -7,9 +7,6 @@ use App\Repository\Eloquent\TransactionRepository;
 use App\Repository\Eloquent\UserRepository;
 use App\Repository\Eloquent\BalanceRepository;
 use App\Models\Transaction;
-use App\Services\UserService;
-use App\Services\BalanceService;
-use App\Services\EmailService;
 use App\Models\Balance;
 use Illuminate\Support\Carbon;
 use App\Models\User;
@@ -20,30 +17,21 @@ use Exception;
 class TransactionService
 {
     private $transactionRepository;
-    private $userRepository;
-    private $userService;
     private $balanceRepository;
-    private $balanceService;
 
     /**
      * construct
      *
+     * @param App\Repository\Eloquent\BalanceRepository $balanceRepository
      * @param App\Repository\Eloquent\TransactionRepository $transactionRepository
      */
     public function __construct(
         TransactionRepository $transactionRepository,
-        UserRepository $userRepository,
         BalanceRepository $balanceRepository,
-        UserService $userService,
-        BalanceService $balanceService
     )
-
     {
-        return $this->transactionRepository = $transactionRepository;
-        return $this->balanceRepository     = $balanceRepository;
-        return $this->userRepository        = $userRepository;
-        return $this->userService           = $userService;
-        return $this->balanceService        = $balanceService;
+        $this->transactionRepository = $transactionRepository;
+        $this->balanceRepository     = $balanceRepository;
     }
 
     /**
@@ -54,7 +42,7 @@ class TransactionService
      */
     public function sendMoney($sent_user_id, $receivingUserDocumentNumber, $amount)
     {
-        $userAmount = Balance::where('user_id', $sent_user_id)->firstOrFail();
+        $userAmount = $this->balanceRepository->find($sent_user_id);
 
         $userAmount = $userAmount->amount;
 
@@ -98,21 +86,21 @@ class TransactionService
     public function doTransaction($send, $to, $amount): bool
     {
         if ($amount <= 0) {
-            throw new Exception("Valor inválido para transferência");
+            throw new Exception("Insufficient Balance");
         }
 
         try{
             DB::beginTransaction();
-            $senderUser = Balance::where('user_id', $send->id)->first();
+            $senderUser = $this->balanceRepository->find($send->id);
 
             if ($senderUser->amount < $amount) {
                 DB::rollback();
-                throw new Exception("Saldo insuficiente para realizar a transferência");
+                throw new Exception("Insufficient Balance");
             }
 
             if ($senderUser->amount < $amount) {
                 DB::rollback();
-                throw new Exception("Saldo insuficiente para realizar a transferência");
+                throw new Exception("Insufficient Balance");
             }
             $senderUser->update(['amount' => $senderUser->amount - $amount]);
             $senderUser->refresh();
@@ -126,7 +114,7 @@ class TransactionService
             $receivingUser->save();
 
             //save the Operation to the transactions log
-            Transaction::create([
+            $this->transactionRepository->create([
                 'sent_user_id'       => $send->id,
                 'receive_user_id'    => $to->id,
                 'action'             => "Transferência para $to->name",
@@ -135,12 +123,12 @@ class TransactionService
 
             if(!$this->sendNotificationEmail()){
                 DB::rollback();
-                throw new Exception("Erro na transação. Por favor, tente novamente mais tarde");
+                throw new Exception("can't do this action. please, try again later");
             }
 
             if(!$this->AllowVerify()){
                 DB::rollback();
-                throw new Exception("Erro na transação. Por favor, tente novamente mais tarde");
+                throw new Exception("can't do this action. Por favor, try again later");
             }
 
             DB::commit();
@@ -148,7 +136,7 @@ class TransactionService
 
         }catch(Exception $e){
             DB::rollback();
-            throw new Exception("Erro na transação. Por favor, tente novamente mais tarde");
+            throw new Exception("can't do this action. Por favor, try again later");
         }
 
         return false;

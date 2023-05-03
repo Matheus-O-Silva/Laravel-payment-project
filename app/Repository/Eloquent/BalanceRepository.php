@@ -8,7 +8,7 @@ use App\Repository\Contracts\BalanceRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Exception;
 
-class BalanceRepository implements BalanceRepositoryInterface
+class BalanceRepository// implements BalanceRepositoryInterface
 {
     protected $balance;
 
@@ -23,21 +23,21 @@ class BalanceRepository implements BalanceRepositoryInterface
     }
 
     /**
-     * retrieves all balance registers
+     * retrieves all transaction registers
      *
      * @param $attributes
-     * @return Array
+     * @return Collection
      */
-    public function findAll(): array
+    public function findAll(): Collection
     {
-        return $this->balance->get()->toArray();
+        return $this->balance->get();
     }
 
     /**
      * create a new balance
      *
      * @param $data
-     * @return Array
+     * @return object
      */
     public function create($data): object
     {
@@ -47,11 +47,11 @@ class BalanceRepository implements BalanceRepositoryInterface
     /**
      * update a balance
      *
-     * @param $email
+     * @param $id
      * @param $data
-     * @return Array
+     * @return Collection
      */
-    public function update(string $id,array $data): object
+    public function update(string $id,array $data): Collection
     {
         $balance = $this->balance->find($id);
         $balance->update($data);
@@ -62,65 +62,39 @@ class BalanceRepository implements BalanceRepositoryInterface
     }
 
     /**
-     * select a user by id
-     *
-     * @param $user_id
-     * @return Array
-     */
-    public function find(string $id): ?object
-    {
-        return $this->balance->where('id',$id)->first();
-    }
-
-    /**
-     * select a user by user_id
+     * select a balance by user_id
      *
      * @param $user_id
      * @return Collection
      */
-    public function findByUserId($user_id): Collection
+    public function find($user_id)//: Collection
     {
-        $user = $this->balance->where('user_id',$user_id)->first();
-
-        if(!$user){
-            throw new Exception("User Not Found", 1);
-        }
-
-        return $user;
+        return $this->balance->where('user_id',$user_id)->first();
     }
 
     /**
      * delete a balance
      *
-     * @param $email
-     * @return Array
+     * @param $id
+     * @return Collection
      */
-    public function delete(string $email): bool
+    public function delete($id): Collection
     {
-        if(!$balance = $this->balance->find($email)){
-            throw new Exception("balance Not Found", 1);
+        if(!$balance = $this->balance->find($id)){
+            throw new Exception("Ballance Not Found");
         }
 
         return $balance->delete();
     }
 
     /**
-     * returns registers with re Attributes
+     * returns registers with Attributes
      *
      * @param $attributes
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function selectRelationAtribbutes($attributes) : Object
+    public function selectRelationAtribbutes($attributes) : Collection
     {
        return $this->balance->with($attributes)->get();
-    }
-
-    public function getBalanceByUserId($user_id)
-    {
-        $userAmount = $this->balance->select('amount')->where('user_id',$user_id)->get();
-
-        $userAmount = $userAmount[0]->amount;
-
-        return $userAmount;
     }
 }

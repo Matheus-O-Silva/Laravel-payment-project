@@ -18,5 +18,4 @@ class Balance extends Model
     {
         return $this->hasMany(User::class);
     }
-
 }
