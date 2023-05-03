@@ -9,7 +9,7 @@ use App\Models\Balance;
 use App\Models\User;
 use App\Models\Role;
 
-class PermissionsRolesSeeder extends Seeder
+class UserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -47,7 +47,7 @@ class PermissionsRolesSeeder extends Seeder
             'name' => 'User',
             'email' => 'user@test.com',
             'documentType' => 2, //By 4Devs
-            'documentNumber' => 123,
+            'documentNumber' => 40493440097,
             'password' => bcrypt('password'),
             'role_id' => $roleClient->id
         ]);
