@@ -16,19 +16,19 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Criação das Roles
+        // create Roles
         $roleShopKeeper = Role::create(['name' => 'shopkeeper']);
         $roleClient = Role::create(['name' => 'client']);
 
-        // Criação das Permissions
+        // create Permissions
         $permissionSendMoney = Permission::create(['name' => 'send_money']);
         $permissionReceiveMoney = Permission::create(['name' => 'receive_money']);
 
-        // Relacionamento de Permissions com Roles
+        // create relationship of permissions with role
         $roleShopKeeper->permissions()->attach([$permissionReceiveMoney->id]);
         $roleClient->permissions()->attach([$permissionReceiveMoney->id, $permissionSendMoney->id]);
 
-        // Criação dos Usuários
+        // create users
         $shopKeeperUser = User::create([
             'name' => 'Admin',
             'email' => 'admin@test.com',
@@ -36,11 +36,6 @@ class UserSeeder extends Seeder
             'documentNumber' => 74981225024, //By 4Devs
             'password' => bcrypt('password'),
             'role_id' => $roleShopKeeper->id
-        ]);
-
-        Balance::create([
-            'user_id' => $shopKeeperUser->id,
-            'amount'  => 0.00
         ]);
 
         $clientUser = User::create([
@@ -52,13 +47,18 @@ class UserSeeder extends Seeder
             'role_id' => $roleClient->id
         ]);
 
+        //create balance of users
+        Balance::create([
+            'user_id' => $shopKeeperUser->id,
+            'amount'  => 0.00
+        ]);
+
         Balance::create([
             'user_id' => $clientUser->id,
             'amount'  => 0.00
         ]);
 
-
-        // Relacionamento de Permissions com Usuários
+        // create relationship of permissions with users
         $shopKeeperUser->permissions()->attach([$permissionReceiveMoney->id]);
         $clientUser->permissions()->attach([$permissionReceiveMoney->id, $permissionSendMoney->id]);
     }
