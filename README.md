@@ -10,7 +10,7 @@ git clone https://github.com/Matheus-O-Silva/Laravel-payment-project.git
 
 ```sh
 
-cd  app-laravel
+cd  Laravel-payment-project
 
 ```
 
