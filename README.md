@@ -167,6 +167,6 @@ php artisan  db:seed
   
 
 
-Acesse o projeto
+O Laravel utilizará a rota:
 
 [http://localhost:8989](http://localhost:8989)
