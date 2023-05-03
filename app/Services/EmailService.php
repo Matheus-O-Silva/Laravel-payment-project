@@ -12,7 +12,7 @@ class EmailService
     {
         $response = Http::get('https://run.mocky.io/v3/4ce65eb0-2eda-4d76-8c98-8acd9cfd2d39');
 
-        if ($response->successful()) {
+        if ($response->successful() && $response->json()['message'] == 'success') {
             return true;
         } else {
            return false;
@@ -23,7 +23,7 @@ class EmailService
     {
         $response = Http::get('https://run.mocky.io/v3/f2fe9a2d-090f-4129-b9bf-70d283c97d5c');
 
-        if ($response->successful()) {
+        if ($response->successful() && $response->json()['messagem'] == 'autorizado') {
             return true;
         } else {
            return false;
