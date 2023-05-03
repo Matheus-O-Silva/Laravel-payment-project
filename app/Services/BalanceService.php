@@ -44,4 +44,38 @@ class BalanceService
         return $userBalance->balance >= $amount;
     }
 
+    /**
+     * Add money to the user account
+     *
+     * @throws \Exception
+     * @return Json
+     */
+    public function addMoney($user_id, $amount): bool
+    {
+
+        if ($amount <= 0) {
+            throw new Exception("Insufficient Balance");
+        }
+
+        $userBalance = Balance::where('user_id', $user_id)->first();
+        $userBalance->update(['amount' => $userBalance->amount + $amount]);
+        $userBalance->refresh();
+        $userBalance->save();
+
+        return true;
+    }
+
+    /**
+     * retrives the amount of the user account
+     *
+     * @throws \Exception
+     * @return Collection
+     */
+    public function getAmount($user_id, $amount): float
+    {
+        $userBalance = Balance::where('user_id', $user_id)->firstOrFail();
+
+        return $userBalance->amount;
+    }
+
 }
