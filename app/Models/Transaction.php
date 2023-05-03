@@ -12,7 +12,8 @@ class Transaction extends Model
     protected $fillable = [
         'sent_user_id',
         'receive_user_id',
-        'transferred_amount'
+        'transferred_amount',
+        'action'
     ];
 
     public function sentUser()

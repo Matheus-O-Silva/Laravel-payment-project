@@ -47,5 +47,28 @@ class BalanceController extends Controller
         return new JsonResponse('success', Response::HTTP_OK);
     }
 
+     /**
+     * retrives the amount of the user account
+     *
+     * @param \Illuminate\Http\Request;
+     * @throws \Exception $e
+     * @return \Symfony\Component\HttpFoundation\JsonResponse;
+     */
+    public function getAmount(Request $request) : JsonResponse
+    {
+        $amount = $this->balanceService->getAmount(Auth::user()->id, $request->amount);
+        try {
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            return response()
+                ->json(
+                    'cannot.perform.your.action.try.again.later',
+                    Response::HTTP_INTERNAL_SERVER_ERROR
+                );
+        }
+
+        return new JsonResponse($amount, Response::HTTP_OK);
+    }
+
 
 }

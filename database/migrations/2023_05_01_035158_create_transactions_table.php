@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreign('sent_user_id')->references('id')->on('users');
             $table->unsignedBigInteger('receive_user_id');
             $table->foreign('receive_user_id')->references('id')->on('users');
+            $table->string('action');
             $table->string('transferred_amount');
             $table->timestamps();
         });

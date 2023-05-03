@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'client'])->group(function () {
     Route::post('/transaction-client', [TransactionController::class, 'sendMoney']);
+    Route::get('/get-transactions', [TransactionController::class, 'getTransactions']);
 });
 
 Route::middleware(['auth:sanctum', 'shopkeeper'])->group(function () {
@@ -19,9 +20,9 @@ Route::middleware(['auth:sanctum', 'shopkeeper'])->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', function (Request $request) {return $request->user();});
-
     Route::post('/add-balance', [BalanceController::class, 'addMoney']);
+    Route::get('/user', function (Request $request) {return $request->user();});
+    Route::get('/get-amount', [BalanceController::class, 'getAmount']);
 });
 
 Route::post('/auth', [AuthController::class, 'login']);

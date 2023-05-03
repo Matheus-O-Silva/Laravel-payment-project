@@ -62,9 +62,20 @@ class BalanceService
         $userBalance->refresh();
         $userBalance->save();
 
-        dd('bora');
-
         return true;
+    }
+
+    /**
+     * retrives the amount of the user account
+     *
+     * @throws \Exception
+     * @return Collection
+     */
+    public function getAmount($user_id, $amount): float
+    {
+        $userBalance = Balance::where('user_id', $user_id)->firstOrFail();
+
+        return $userBalance->amount;
     }
 
 }

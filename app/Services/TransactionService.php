@@ -11,6 +11,7 @@ use App\Services\UserService;
 use App\Services\BalanceService;
 use App\Services\EmailService;
 use App\Models\Balance;
+use Illuminate\Support\Carbon;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -53,18 +54,15 @@ class TransactionService
      */
     public function sendMoney($sent_user_id, $receivingUserDocumentNumber, $amount)
     {
-        $userAmount = Balance::where('user_id', $sent_user_id)->first();
-        if(empty($userAmount->amount)){
-            throw new Exception("Insufficient balance");
-        }
+        $userAmount = Balance::where('user_id', $sent_user_id)->firstOrFail();
 
         $userAmount = $userAmount->amount;
 
         //if the user has enough balance, continue the operation
         if($userAmount >= $amount){
             $user          = User::find($sent_user_id);
-            $receivingUser = User::where('documentNumber',$receivingUserDocumentNumber)->get();
-            if(empty($receivingUser)){
+            $receivingUser = User::where('documentNumber',$receivingUserDocumentNumber)->first();
+            if(!$receivingUser){
                 throw new Exception("User Not Found");
             }
 
@@ -98,7 +96,7 @@ class TransactionService
             throw new Exception("Valor inválido para transferência");
         }
 
-        try{
+        //try{
             DB::beginTransaction();
             $senderUser = Balance::where('user_id', $send->id)->first();
 
@@ -116,7 +114,7 @@ class TransactionService
             $senderUser->save();
 
             //add amount to the receiving user
-            $receivingUser = Balance::where('user_id', $to[0]->id)->first();
+            $receivingUser = Balance::where('user_id', $to->id)->first();
 
             $receivingUser->update(['amount' => $receivingUser->amount + $amount]);
             $receivingUser->refresh();
@@ -125,7 +123,8 @@ class TransactionService
             //save the Operation to the transactions log
             Transaction::create([
                 'sent_user_id'       => $send->id,
-                'receive_user_id'    => $to[0]->id,
+                'receive_user_id'    => $to->id,
+                'action'             => "Transferência para $to->name",
                 'transferred_amount' => $amount
             ]);
 
@@ -142,12 +141,32 @@ class TransactionService
             DB::commit();
             return true;
 
-        }catch(Exception $e){
-            DB::rollback();
-            throw new Exception("Erro na transação. Por favor, tente novamente mais tarde");
-        }
+        // }catch(Exception $e){
+        //     DB::rollback();
+        //     throw new Exception("Erro na transação. Por favor, tente novamente mais tarde");
+        // }
 
         return false;
+    }
+
+    public function getTransactions($userId)
+    {
+        $userTransactions = Transaction::where('sent_user_id', $userId)->get()->map(function ($transaction) {
+            $transaction->created_at_formatted = Carbon::parse($transaction->created_at)->format('d/m/Y H:i:s');
+            return $transaction;
+        });
+
+        return $userTransactions;
+    }
+
+    public function getReceivings($userId)
+    {
+        $userTransactions = Transaction::where('receive_user_id', $userId)->get()->map(function ($transaction) {
+            $transaction->created_at_formatted = Carbon::parse($transaction->created_at)->format('d/m/Y H:i:s');
+            return $transaction;
+        });
+
+        return $userTransactions;
     }
 
     public function sendNotificationEmail(): bool

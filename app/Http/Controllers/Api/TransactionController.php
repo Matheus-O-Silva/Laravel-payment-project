@@ -7,6 +7,7 @@ use App\Services\TransactionService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class TransactionController extends Controller
@@ -30,10 +31,10 @@ class TransactionController extends Controller
      * @throws \Exception $e
      * @return \Symfony\Component\HttpFoundation\JsonResponse;
      */
-    public function sendMoney(Request $request)// : JsonResponse
+    public function sendMoney(Request $request) : JsonResponse
     {
         try {
-            $this->transactionService->sendMoney($request->sent_user_id, $request->receivingUserDocumentNumber, $request->amount);
+            $this->transactionService->sendMoney(Auth::user()->id, $request->receivingUserDocumentNumber, $request->amount);
         } catch (\Throwable $e) {
             Log::error($e->getMessage());
             return response()
@@ -44,6 +45,46 @@ class TransactionController extends Controller
         }
 
         return new JsonResponse('success', Response::HTTP_OK);
+    }
+
+
+    /**
+     * retrieves user transactions
+     *
+     * @param \Illuminate\Http\Request;
+     * @throws \Exception $e
+     * @return \Symfony\Component\HttpFoundation\JsonResponse;
+     */
+    public function getTransactions() : JsonResponse
+    {
+        try {
+            $userTransactions = $this->transactionService->getTransactions(Auth::user()->id);
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            return response()
+                ->json(
+                    'cannot.perform.your.action.try.again.later',
+                    Response::HTTP_INTERNAL_SERVER_ERROR
+                );
+        }
+
+        return new JsonResponse($userTransactions, Response::HTTP_OK);
+    }
+
+    public function getReceivings()
+    {
+        try {
+            $userReceivings = $this->transactionService->getReceivings(Auth::user()->id);
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage());
+            return response()
+                ->json(
+                    'cannot.perform.your.action.try.again.later',
+                    Response::HTTP_INTERNAL_SERVER_ERROR
+                );
+        }
+
+        return new JsonResponse($userReceivings, Response::HTTP_OK);
     }
 
 
