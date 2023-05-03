@@ -62,6 +62,11 @@ class TransactionService
         if($userAmount >= $amount){
             $user          = User::find($sent_user_id);
             $receivingUser = User::where('documentNumber',$receivingUserDocumentNumber)->first();
+
+            if($user->id == $receivingUser->id){
+                throw new Exception("Can't send cash to yourself");
+            }
+
             if(!$receivingUser){
                 throw new Exception("User Not Found");
             }
@@ -80,7 +85,7 @@ class TransactionService
             $this->doTransaction($user, $receivingUser, $amount);
 
         }else{
-            throw new Exception("Saldo insuficiente para realizar a transferência");
+            throw new Exception("Insufficient Balance");
         }
     }
 
@@ -96,7 +101,7 @@ class TransactionService
             throw new Exception("Valor inválido para transferência");
         }
 
-        //try{
+        try{
             DB::beginTransaction();
             $senderUser = Balance::where('user_id', $send->id)->first();
 
@@ -141,10 +146,10 @@ class TransactionService
             DB::commit();
             return true;
 
-        // }catch(Exception $e){
-        //     DB::rollback();
-        //     throw new Exception("Erro na transação. Por favor, tente novamente mais tarde");
-        // }
+        }catch(Exception $e){
+            DB::rollback();
+            throw new Exception("Erro na transação. Por favor, tente novamente mais tarde");
+        }
 
         return false;
     }
