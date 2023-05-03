@@ -4,20 +4,20 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Repository\Eloquent\TransactionRepository;
-use App\Repository\Eloquent\UserRepository;
 use App\Repository\Eloquent\BalanceRepository;
 use App\Models\Transaction;
 use App\Models\Balance;
+use App\Services\EmailService;
 use Illuminate\Support\Carbon;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Exception;
 
 class TransactionService
 {
     private $transactionRepository;
     private $balanceRepository;
+    private $emailService;
 
     /**
      * construct
@@ -28,10 +28,12 @@ class TransactionService
     public function __construct(
         TransactionRepository $transactionRepository,
         BalanceRepository $balanceRepository,
+        EmailService $emailService
     )
     {
         $this->transactionRepository = $transactionRepository;
         $this->balanceRepository     = $balanceRepository;
+        $this->emailService          = $emailService;
     }
 
     /**
@@ -121,12 +123,12 @@ class TransactionService
                 'transferred_amount' => $amount
             ]);
 
-            if(!$this->sendNotificationEmail()){
+            if(!$this->emailService->sendNotificationEmail()){
                 DB::rollback();
                 throw new Exception("can't do this action. please, try again later");
             }
 
-            if(!$this->AllowVerify()){
+            if(!$this->emailService->AllowVerify()){
                 DB::rollback();
                 throw new Exception("can't do this action. Por favor, try again later");
             }
@@ -162,26 +164,6 @@ class TransactionService
         return $userTransactions;
     }
 
-    public function sendNotificationEmail(): bool
-    {
-        $response = Http::get('https://run.mocky.io/v3/4ce65eb0-2eda-4d76-8c98-8acd9cfd2d39');
 
-        if ($response->successful()) {
-            return true;
-        } else {
-           return false;
-        }
-    }
-
-    public function AllowVerify(): bool
-    {
-        $response = Http::get('https://run.mocky.io/v3/f2fe9a2d-090f-4129-b9bf-70d283c97d5c');
-
-        if ($response->successful()) {
-            return true;
-        } else {
-           return false;
-        }
-    }
 
 }
