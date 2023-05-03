@@ -51,7 +51,6 @@ class TransactionController extends Controller
     /**
      * retrieves user transactions
      *
-     * @param \Illuminate\Http\Request;
      * @throws \Exception $e
      * @return \Symfony\Component\HttpFoundation\JsonResponse;
      */
@@ -70,22 +69,5 @@ class TransactionController extends Controller
 
         return new JsonResponse($userTransactions, Response::HTTP_OK);
     }
-
-    public function getReceivings()
-    {
-        try {
-            $userReceivings = $this->transactionService->getReceivings(Auth::user()->id);
-        } catch (\Throwable $e) {
-            Log::error($e->getMessage());
-            return response()
-                ->json(
-                    'cannot.perform.your.action.try.again.later',
-                    Response::HTTP_INTERNAL_SERVER_ERROR
-                );
-        }
-
-        return new JsonResponse($userReceivings, Response::HTTP_OK);
-    }
-
 
 }
